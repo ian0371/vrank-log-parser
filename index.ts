@@ -20,8 +20,9 @@ async function main() {
   const lines = fs.readFileSync(filename, "utf-8").split("\n").filter(Boolean);
 
   for (let line of lines) {
-    const { logger, blocknum, round, late, bitmap } = parseLog(line);
+    const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
     const { committee, proposer } = await getBlockInfo(blocknum);
+    const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
     const assessments = parseBitmap(bitmap);
 
     const assessmentObj: { [key: string]: { kind: number; time: number } } = {};
