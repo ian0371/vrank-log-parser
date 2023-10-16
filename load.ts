@@ -10,6 +10,8 @@ type blockInfo = {
   proposer: string;
 };
 
+let gcnames: any;
+
 const blockInfoCache: { [key: number]: blockInfo } = {};
 
 /*
@@ -35,17 +37,20 @@ async function main() {
     const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
     const assessments = parseBitmap(bitmap);
 
-    const assessmentObj: { [key: string]: { kind: number; time: number } } = {};
+    const earlys = [],
+      lates = [],
+      notArriveds = [],
+      lateTimes = [];
     for (let i = 0; i < committee.length; i++) {
-      let time = 0;
       if (assessments[i] == 1) {
         // late
-        time = late.shift() ?? 0;
+        lates.push(committee[i]);
+        lateTimes.push(late.shift() ?? 0);
+      } else if (assessments[i] == 0) {
+        earlys.push(committee[i]);
+      } else {
+        notArriveds.push(committee[i]);
       }
-      assessmentObj[committee[i]] = {
-        kind: assessments[i],
-        time,
-      };
     }
 
     const result = new VrankLog({
@@ -53,7 +58,12 @@ async function main() {
       round,
       logger,
       proposer,
-      assessment: assessmentObj,
+      assessment: {
+        early: earlys,
+        late: lates,
+        notArrived: notArriveds,
+        lateTimes,
+      },
     });
 
     // skip if duplicate data
@@ -102,9 +112,24 @@ async function getBlockInfo(blockNum: number) {
     ]);
 
   committee.sort((a, b) => a.localeCompare(b));
-  const ret: blockInfo = { committee, proposer };
+  const ret: blockInfo = {
+    committee: committee.map(getNameByAddress),
+    proposer: getNameByAddress(proposer),
+  };
   blockInfoCache[blockNum] = ret;
   return ret;
+}
+
+function getNameByAddress(addr: string) {
+  if (gcnames == null) {
+    gcnames = JSON.parse(fs.readFileSync("gcnames.json", "utf-8"));
+  }
+
+  if (gcnames[addr] == null) {
+    throw Error(`no addr ${addr}`);
+  }
+
+  return gcnames[addr];
 }
 
 // We recommend this pattern to be able to use async/await everywhere
