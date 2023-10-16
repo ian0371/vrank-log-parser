@@ -9,6 +9,7 @@
   },
   "type": "module",
   "dependencies": {
-    "ethers": "5"
+    "ethers": "5",
+    "mongoose": "^7.6.2"
   }
 }
