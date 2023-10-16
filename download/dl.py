@@ -6,7 +6,6 @@ import collections
 import json
 import os
 import subprocess
-import timelength
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from os import path
@@ -52,6 +51,7 @@ Segment = collections.namedtuple('Segment', ['tag', 'start_msec', 'end_msec'])
 
 def parse_args() -> Context:
     script_dir = path.dirname(__file__)
+    default_bin_path = path.abspath(path.join(script_dir, "dd-downloader", "dd-downloader"))
     default_config_path = path.abspath(path.join(script_dir, "config.yml"))
     default_output_dir = path.abspath(path.join(script_dir, "output"))
 
@@ -74,7 +74,7 @@ def parse_args() -> Context:
     args = parser.parse_args()
 
     ctx = Context(
-        dd_path     = "dd-downloader",
+        dd_path     = default_bin_path,
         config_path = args.config,
         output_dir  = args.output,
         dd_api_key  = os.getenv("DD_API_KEY"),
