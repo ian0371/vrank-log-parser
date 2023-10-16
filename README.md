@@ -6,14 +6,18 @@ To install dependencies:
 bun install
 ```
 
-To run:
+To run for the first time:
 
 ```bash
 mkdir data
 docker pull mongo
 docker run --name mongo -v ./data:/data/db -d -p 27017:27017 mongo
+bun run load.ts input.txt
+```
 
-bun run load.ts
+To view data:
+
+```bash
 bun run view.ts
 ```
 
