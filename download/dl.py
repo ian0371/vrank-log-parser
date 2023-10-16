@@ -133,7 +133,7 @@ def dl_segment(ctx: Context, seg: Segment):
     print("[+] Fetching {}".format(seg.tag))
     config_path = path.relpath(ctx.config_path, os.curdir)
     output_path = path.join(ctx.output_dir, "vrank_logs_{}.csv".format(seg.tag))
-    subprocess.run(['dd-downloader', 'run', 'parallel', '-c', config_path, '-f', output_path])
+    subprocess.run([ctx.dd_path, 'run', 'parallel', '-c', config_path, '-f', output_path])
 
 if __name__ == '__main__':
     ctx = parse_args()
