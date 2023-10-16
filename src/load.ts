@@ -34,7 +34,24 @@ async function main() {
   let minBlocknum = 9999999999,
     maxBlocknum = 0;
 
+  let vrankLogs: VrankLog[] = [];
+
   for (let [i, line] of lines.entries()) {
+    if ((i & 0xff) == 0 || i == lines.length - 1) {
+      console.log(`Parsing line ${i + 1} into DB`);
+      if (vrankLogs.length > 0) {
+        // skip if duplicate data
+        try {
+          await VrankLog.insertMany(vrankLogs);
+        } catch (err: any) {
+          if (err.code != 11000) {
+            throw err;
+          }
+        }
+      }
+      vrankLogs = [];
+    }
+
     const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
     if (blocknum < minBlocknum) {
       minBlocknum = blocknum;
@@ -61,30 +78,20 @@ async function main() {
       }
     }
 
-    const result = new VrankLog({
-      blocknum,
-      round,
-      logger,
-      proposer,
-      assessment: {
-        early: earlys,
-        late: lates,
-        notArrived: notArriveds,
-        lateTimes,
-      },
-    });
-
-    // skip if duplicate data
-    try {
-      await result.save();
-    } catch (err: any) {
-      if (err.code != 11000) {
-        throw err;
-      }
-    }
-    if (i % 100 == 0) {
-      console.log(`Parsing line ${i + 1} into DB`);
-    }
+    vrankLogs.push(
+      new VrankLog({
+        blocknum,
+        round,
+        logger,
+        proposer,
+        assessment: {
+          early: earlys,
+          late: lates,
+          notArrived: notArriveds,
+          lateTimes,
+        },
+      }),
+    );
   }
 
   await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
@@ -96,7 +103,16 @@ function parseLog(log: string) {
   const [logger, blocknumStr, roundStr, lateStr, bitmap] = log.split(",");
   const blocknum = parseInt(blocknumStr);
   const round = parseInt(roundStr);
-  const late = lateStr.replace(/\[|\]/g, "").split(" ").map(Number);
+  const late = lateStr
+    .replace(/\[|\]/g, "")
+    .split(" ")
+    .map((x) => {
+      if (x.endsWith("s")) {
+        return Number(x.slice(0, -1)) * 1000;
+      } else {
+        return Number(x);
+      }
+    });
   return {
     logger: logger.replace(/-cn-01$/, ""),
     blocknum,

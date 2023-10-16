@@ -8,7 +8,7 @@ async function main() {
 
   const vrankLogs = await VrankLog.find();
   console.log("#records:", vrankLogs.length);
-  console.log(vrankLogs);
+  console.log("first record:", vrankLogs[0]);
 
   await mongoose.disconnect();
 }
