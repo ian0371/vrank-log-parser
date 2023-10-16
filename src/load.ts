@@ -50,6 +50,9 @@ async function main() {
   let vrankLogs: VrankLog[] = [];
 
   for (let [i, line] of lines.entries()) {
+    if (line.includes("host,blocknumber,round,late,bitmap")) {
+      continue;
+    }
     // batch insert
     if (i % 1000 == 0) {
       console.log(`Parsing line ${i + 1} into DB`);
