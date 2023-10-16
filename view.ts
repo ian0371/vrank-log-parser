@@ -7,7 +7,7 @@ async function main() {
   console.log("Connected successfully");
 
   const vrankLogs = await VrankLog.find();
-  console.log(vrankLogs.length);
+  console.log("#records:", vrankLogs.length);
 
   await mongoose.disconnect();
 }

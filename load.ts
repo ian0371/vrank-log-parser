@@ -49,9 +49,9 @@ async function main() {
     }
 
     const result = new VrankLog({
-      logger,
       blocknum,
       round,
+      logger,
       proposer,
       assessment: assessmentObj,
     });
