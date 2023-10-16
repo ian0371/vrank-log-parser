@@ -14,6 +14,19 @@ let gcnames: any;
 
 const blockInfoCache: { [key: number]: blockInfo } = {};
 
+async function insertVrankLog(v: VrankLog[]) {
+  if (v.length > 0) {
+    // skip if duplicate data
+    try {
+      await VrankLog.insertMany(v);
+    } catch (err: any) {
+      if (err.code != 11000) {
+        throw err;
+      }
+    }
+  }
+}
+
 /*
  * input log format: host,blocknum,round,late,bitmap,message
  * a character bitmap encodes the status of two validators
@@ -37,22 +50,15 @@ async function main() {
   let vrankLogs: VrankLog[] = [];
 
   for (let [i, line] of lines.entries()) {
+    // batch insert
     if (i % 1000 == 0) {
       console.log(`Parsing line ${i + 1} into DB`);
-      if (vrankLogs.length > 0) {
-        // skip if duplicate data
-        try {
-          await VrankLog.insertMany(vrankLogs);
-        } catch (err: any) {
-          if (err.code != 11000) {
-            throw err;
-          }
-        }
-      }
+      await insertVrankLog(vrankLogs);
       vrankLogs = [];
     }
 
-    const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
+    const { logger, blocknum, round, late, committee, proposer, assessments } =
+      await processLine(line);
     if (blocknum < minBlocknum) {
       minBlocknum = blocknum;
     }
@@ -60,36 +66,11 @@ async function main() {
       maxBlocknum = blocknum;
     }
 
-    let committee, proposer;
-    for (;;) {
-      try {
-        ({ committee, proposer } = await getBlockInfo(blocknum));
-        break;
-      } catch (err: any) {
-        if (err.code == "TIMEOUT") {
-          console.log(`RPC timeout. retrying... ${blocknum}`);
-          continue;
-        }
-        throw err;
-      }
-    }
-    const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
-    const assessments = parseBitmap(bitmap);
-
-    const earlys = [],
-      lates = [],
-      notArriveds = [],
-      lateTimes = [];
-    for (let i = 0; i < committee.length; i++) {
-      if (assessments[i] == 1) {
-        lates.push(committee[i]);
-        lateTimes.push(late.shift() ?? 0);
-      } else if (assessments[i] == 0) {
-        earlys.push(committee[i]);
-      } else {
-        notArriveds.push(committee[i]);
-      }
-    }
+    const { earlys, lates, notArriveds, lateTimes } = group(
+      committee,
+      assessments,
+      late,
+    );
 
     vrankLogs.push(
       new VrankLog({
@@ -107,17 +88,7 @@ async function main() {
     );
   }
 
-  // insert the rest
-  if (vrankLogs.length > 0) {
-    // skip if duplicate data
-    try {
-      await VrankLog.insertMany(vrankLogs);
-    } catch (err: any) {
-      if (err.code != 11000) {
-        throw err;
-      }
-    }
-  }
+  await insertVrankLog(vrankLogs);
 
   await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
 
@@ -157,7 +128,56 @@ function parseBitmap(bitmap: string) {
   return assessments;
 }
 
-async function getBlockInfo(blockNum: number) {
+async function getBlockInfoLoop(blockNum: number) {
+  for (;;) {
+    try {
+      return await _getBlockInfo(blockNum);
+    } catch (err: any) {
+      if (err.code == "TIMEOUT") {
+        console.log(`RPC timeout. retrying... ${blockNum}`);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+async function processLine(line: string) {
+  const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
+  const { committee, proposer } = await getBlockInfoLoop(blocknum);
+  const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
+  const assessments = parseBitmap(bitmap);
+  return {
+    logger,
+    blocknum,
+    round,
+    late,
+    bitmap,
+    committee,
+    proposer,
+    assessments,
+  };
+}
+
+function group(committee: string[], assessments: number[], late: number[]) {
+  const earlys = [],
+    lates = [],
+    notArriveds = [],
+    lateTimes = [];
+  for (let i = 0; i < committee.length; i++) {
+    if (assessments[i] == 1) {
+      lates.push(committee[i]);
+      lateTimes.push(late.shift() ?? 0);
+    } else if (assessments[i] == 0) {
+      earlys.push(committee[i]);
+    } else {
+      notArriveds.push(committee[i]);
+    }
+  }
+  return { earlys, lates, notArriveds, lateTimes };
+}
+
+async function _getBlockInfo(blockNum: number) {
   if (blockInfoCache[blockNum] != null) {
     return blockInfoCache[blockNum];
   }
