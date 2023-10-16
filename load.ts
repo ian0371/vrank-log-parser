@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import * as fs from "fs";
 import * as mongoose from "mongoose";
-import { VrankLog } from "./schema";
+import { VrankLog, VrankLogMetadata } from "./schema";
 
 const RPC_ENDPOINT = "https://archive-en.cypress.klaytn.net";
 
@@ -31,8 +31,17 @@ async function main() {
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
+  let minBlocknum = 9999999999,
+    maxBlocknum = 0;
+
   for (let [i, line] of lines.entries()) {
     const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
+    if (blocknum < minBlocknum) {
+      minBlocknum = blocknum;
+    }
+    if (blocknum > maxBlocknum) {
+      maxBlocknum = blocknum;
+    }
     const { committee, proposer } = await getBlockInfo(blocknum);
     const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
     const assessments = parseBitmap(bitmap);
@@ -77,6 +86,8 @@ async function main() {
       console.log(`Parsing line ${i + 1} into DB`);
     }
   }
+
+  await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
 
   await mongoose.disconnect();
 }
