@@ -3,7 +3,8 @@ import * as fs from "fs";
 import * as mongoose from "mongoose";
 import { VrankLog, VrankLogMetadata } from "./schema";
 
-const RPC_ENDPOINT = "https://archive-en.cypress.klaytn.net";
+const RPC_ENDPOINT =
+  process.env.RPC_ENDPOINT ?? "https://public-en-cypress.klaytn.net";
 
 type blockInfo = {
   committee: string[];
