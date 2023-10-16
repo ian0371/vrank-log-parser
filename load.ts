@@ -43,7 +43,6 @@ async function main() {
       lateTimes = [];
     for (let i = 0; i < committee.length; i++) {
       if (assessments[i] == 1) {
-        // late
         lates.push(committee[i]);
         lateTimes.push(late.shift() ?? 0);
       } else if (assessments[i] == 0) {
@@ -87,7 +86,13 @@ function parseLog(log: string) {
   const blocknum = parseInt(blocknumStr);
   const round = parseInt(roundStr);
   const late = lateStr.replace(/\[|\]/g, "").split(" ").map(Number);
-  return { logger, blocknum, round, late, bitmap };
+  return {
+    logger: logger.replace(/-cn-01$/, ""),
+    blocknum,
+    round,
+    late,
+    bitmap,
+  };
 }
 
 function parseBitmap(bitmap: string) {
