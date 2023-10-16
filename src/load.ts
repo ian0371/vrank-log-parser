@@ -37,7 +37,7 @@ async function main() {
   let vrankLogs: VrankLog[] = [];
 
   for (let [i, line] of lines.entries()) {
-    if ((i & 0xff) == 0 || i == lines.length - 1) {
+    if (i % 1000 == 0) {
       console.log(`Parsing line ${i + 1} into DB`);
       if (vrankLogs.length > 0) {
         // skip if duplicate data
@@ -59,7 +59,20 @@ async function main() {
     if (blocknum > maxBlocknum) {
       maxBlocknum = blocknum;
     }
-    const { committee, proposer } = await getBlockInfo(blocknum);
+
+    let committee, proposer;
+    for (;;) {
+      try {
+        ({ committee, proposer } = await getBlockInfo(blocknum));
+        break;
+      } catch (err: any) {
+        if (err.code == "TIMEOUT") {
+          console.log("RPC timeout. retrying...");
+          continue;
+        }
+        throw err;
+      }
+    }
     const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
     const assessments = parseBitmap(bitmap);
 
@@ -92,6 +105,18 @@ async function main() {
         },
       }),
     );
+  }
+
+  // insert the rest
+  if (vrankLogs.length > 0) {
+    // skip if duplicate data
+    try {
+      await VrankLog.insertMany(vrankLogs);
+    } catch (err: any) {
+      if (err.code != 11000) {
+        throw err;
+      }
+    }
   }
 
   await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
