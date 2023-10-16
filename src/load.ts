@@ -67,7 +67,7 @@ async function main() {
         break;
       } catch (err: any) {
         if (err.code == "TIMEOUT") {
-          console.log("RPC timeout. retrying...");
+          console.log(`RPC timeout. retrying... ${blocknum}`);
           continue;
         }
         throw err;
