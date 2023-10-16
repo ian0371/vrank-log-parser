@@ -2,11 +2,11 @@
 
 set -ex
 
-if [ -z dd-downloader ]; then
+if [ ! -d dd-downloader ]; then
     git clone https://github.com/jiseongnoh/dd-downloader.git
     cd dd-downloader
     git checkout hostname
-    make
+    go build
 fi
 
 pip install pytz python-dotenv pytimeparse
