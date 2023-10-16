@@ -11,6 +11,13 @@ Requires
 ./setup.sh
 ```
 
+Configure `.env`
+
+```
+cp .env.template .env
+vi .env
+```
+
 ## Download
 
 For testing
