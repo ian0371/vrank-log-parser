@@ -10,6 +10,14 @@ Requires
 ./setup.sh
 ```
 
+## Config
+
+```
+cp .env.template .env
+```
+
+Then setup `DD_API_KEY` and `DD_APP_KEY`
+
 ## Download
 
 For testing
