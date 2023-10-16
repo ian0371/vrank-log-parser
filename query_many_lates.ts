@@ -19,7 +19,7 @@ async function main() {
     blocknum < metadata.maxBlocknum + 1;
     blocknum++
   ) {
-    const ret = await queryBlock(blocknum);
+    const ret = await getProposerLog(blocknum);
 
     // if no log exist, consider it late (problematic).
     const numLates = ret?.assessment?.late.length ?? 99;
@@ -32,7 +32,7 @@ async function main() {
   await mongoose.disconnect();
 }
 
-async function queryBlock(blocknum: number) {
+async function getProposerLog(blocknum: number) {
   return await VrankLog.findOne({
     $and: [
       { blocknum: blocknum },

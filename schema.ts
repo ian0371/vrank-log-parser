@@ -8,7 +8,7 @@ const vrankLogSchema = new mongoose.Schema({
   assessment: {
     early: [String],
     late: [String],
-    lateTimes: [String],
+    lateTimes: [Number],
     notArrived: [String],
   },
 });
