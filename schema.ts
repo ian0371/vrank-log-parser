@@ -15,5 +15,7 @@ const vrankLogSchema = new mongoose.Schema({
   },
 });
 
+vrankLogSchema.index({ blocknum: 1, logger: 1, round: 1 }, { unique: true });
+
 export type VrankLog = mongoose.InferSchemaType<typeof vrankLogSchema>;
 export const VrankLog = mongoose.model("VrankLog", vrankLogSchema);

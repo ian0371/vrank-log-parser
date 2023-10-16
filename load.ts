@@ -55,7 +55,15 @@ async function main() {
       proposer,
       assessment: assessmentObj,
     });
-    await result.save();
+
+    // skip if duplicate data
+    try {
+      await result.save();
+    } catch (err: any) {
+      if (err.code != 11000) {
+        throw err;
+      }
+    }
     if (i % 100 == 0) {
       console.log(`Parsing line ${i + 1} into DB`);
     }
