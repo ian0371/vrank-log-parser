@@ -11,8 +11,10 @@ async function main() {
     JSON.parse(fs.readFileSync("gcnames.json", "utf-8")),
   );
 
+  console.log(["proposers"].concat(gcNames).join(","));
+
   for (const proposer of gcNames) {
-    console.log(`proposer=logger=${proposer}`);
+    const row = [proposer];
     for (const target of gcNames) {
       const ret = await VrankLog.find({
         $and: [
@@ -21,10 +23,12 @@ async function main() {
           { "assessment.late": { $elemMatch: { $eq: target } } },
         ],
       });
-      if (ret.length > 0) {
-        console.log(`* ${target}: ${ret.length}`);
-      }
+      console.log(ret);
+      await mongoose.disconnect();
+      return;
+      row.push(ret.length.toString());
     }
+    console.log(row.join(","));
   }
 
   await mongoose.disconnect();
