@@ -1,14 +1,21 @@
 import * as mongoose from "mongoose";
-import { VrankLog } from "./schema";
+import { logLateGc } from "./util";
 
 async function main() {
   console.log("Connecting Mongo DB...");
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
-  const vrankLogs = await VrankLog.countDocuments({});
-  console.log("#records:", vrankLogs);
-  console.log("first record:", await VrankLog.findOne());
+  if (process.argv.length < 4) {
+    console.error(
+      `Usage: ${process.argv[0]} ${process.argv[1]} <PrevProposer> <Logger>`,
+    );
+    throw Error("Argument missing");
+  }
+
+  const proposer = process.argv[2];
+  const logger = process.argv[3];
+  await logLateGc(proposer, logger);
 
   await mongoose.disconnect();
 }

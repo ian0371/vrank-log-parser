@@ -1,5 +1,5 @@
 import * as mongoose from "mongoose";
-import { VrankLog, VrankLogMetadata } from "./schema";
+import { VrankLog } from "../src/schema";
 
 async function main() {
   console.log("Connecting Mongo DB...");
@@ -7,16 +7,9 @@ async function main() {
   console.log("Connected successfully");
 
   const threshold = 8;
-  const metadata = await VrankLogMetadata.findOne();
-  if (metadata == null) {
-    throw Error("metadata is null");
-  }
+  const blockNums: number[] = await VrankLog.distinct("blocknum");
 
-  for (
-    let blocknum = metadata.minBlocknum;
-    blocknum < metadata.maxBlocknum + 1;
-    blocknum++
-  ) {
+  for (const blocknum of blockNums) {
     const ret = await getProposerLog(blocknum);
 
     // if no log exist, consider it late (problematic).

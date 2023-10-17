@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as mongoose from "mongoose";
-import { VrankLog, VrankLogMetadata } from "./schema";
+import { VrankLog } from "./schema";
 import { getConsensusBlockLoop, isValidGcName } from "./util";
 
 /*
@@ -84,19 +84,6 @@ async function main() {
   }
 
   await insertVrankLog(vrankLogs);
-
-  let metadata = await VrankLogMetadata.findOne();
-  if (metadata != null) {
-    if (metadata.minBlocknum > minBlocknum) {
-      metadata.minBlocknum = minBlocknum;
-    }
-    if (metadata.maxBlocknum < maxBlocknum) {
-      metadata.maxBlocknum = maxBlocknum;
-    }
-    await new VrankLogMetadata(metadata).save();
-  } else {
-    await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
-  }
 
   await mongoose.disconnect();
 }

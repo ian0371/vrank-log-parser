@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-
 import * as fs from "fs";
+
 let gcnames: { [key: string]: string };
 const blockInfoCache: { [key: number]: blockInfo } = {};
 

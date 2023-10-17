@@ -1,6 +1,6 @@
 import * as mongoose from "mongoose";
-import { VrankLog } from "./schema";
-import { loadGcNames } from "./util";
+import { VrankLog } from "../src/schema";
+import { loadGcNames } from "../src/util";
 
 async function main() {
   console.log("Connecting Mongo DB...");

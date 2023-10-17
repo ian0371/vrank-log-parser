@@ -1,6 +1,6 @@
 import * as mongoose from "mongoose";
-import { logLateGc } from "./query_over_300";
-import { loadGcNames } from "./util";
+import { logLateGc } from "./util";
+import { loadGcNames } from "../src/util";
 
 async function main() {
   console.log("Connecting Mongo DB...");

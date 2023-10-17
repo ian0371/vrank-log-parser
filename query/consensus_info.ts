@@ -1,4 +1,4 @@
-import { getConsensusBlockLoop } from "./util";
+import { getConsensusBlockLoop } from "../src/util";
 
 async function main() {
   if (process.argv.length < 3) {
