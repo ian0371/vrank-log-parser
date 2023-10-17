@@ -215,7 +215,9 @@ async function _getBlockInfo(blockNum: number) {
       "0x" + blockNum.toString(16),
     ]);
 
-  committee.sort((a, b) => a.localeCompare(b));
+  // validator is sorted by checksum-ed address, case-sensitive
+  committee = committee.map((x) => ethers.utils.getAddress(x));
+  committee.sort();
   const ret: blockInfo = {
     committee: committee.map(getNameByAddress),
     proposer: getNameByAddress(proposer),
