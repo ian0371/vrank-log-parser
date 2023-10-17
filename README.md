@@ -37,6 +37,11 @@ Queries
   - desc: if block number is given, shows the refined log at block.
     if not, finds blocks where prevProposer and proposer matches, and shows the refined logs at the blocks.
     (prev)proposer can be "any".
+  - output:
+    - blank: early
+    - number: late time (ms)
+    - x: not arrived
+    - -: not committee / log does not exist
 - view
   - desc: Shows the number of records in DB, and shows the first record
 
