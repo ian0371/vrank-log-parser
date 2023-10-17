@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import * as mongoose from "mongoose";
 import { VrankLog, VrankLogMetadata } from "./schema";
-import { isValidGcName } from "./util";
-import { getConsensusBlockLoop } from "./consensus_info";
+import { getConsensusBlockLoop, isValidGcName } from "./util";
 
 /*
  * input log format: host,blocknum,round,late,bitmap,message

@@ -1,23 +1,21 @@
-import * as fs from "fs";
 import * as mongoose from "mongoose";
 import { VrankLog } from "./schema";
+import { loadGcNames } from "./util";
 
 async function main() {
   console.log("Connecting Mongo DB...");
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
-  let gcNames: string[] = Object.values(
-    JSON.parse(fs.readFileSync("gcnames.json", "utf-8")),
-  );
+  let gcnames = Object.values(loadGcNames());
 
-  for (const proposer of gcNames) {
-    for (const logger of gcNames) {
+  for (const proposer of gcnames) {
+    for (const logger of gcnames) {
       if (proposer == logger) {
         continue;
       }
       console.log(`proposer=${proposer} logger=${logger}`);
-      for (const target of gcNames) {
+      for (const target of gcnames) {
         const ret = await VrankLog.find({
           $and: [
             { proposer: proposer },

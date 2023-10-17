@@ -1,21 +1,26 @@
-import * as fs from "fs";
 import * as mongoose from "mongoose";
 import { VrankLog } from "./schema";
+import { loadGcNames } from "./util";
 
 async function main() {
   console.log("Connecting Mongo DB...");
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
-  let gcNames: string[] = Object.values(
-    JSON.parse(fs.readFileSync("gcnames.json", "utf-8")),
-  );
+  if (process.argv.length < 4) {
+    console.error(
+      `Usage: ${process.argv[0]} ${process.argv[1]} <Proposer1> <Proposer2>`,
+      `Returns late GCs for blocks where block #N-1 proposer = Proposer1 && block #N proposer = Proposer2`,
+    );
+    throw Error("Argument missing");
+  }
+  let gcnames = Object.values(loadGcNames());
 
-  console.log(["proposers"].concat(gcNames).join(","));
+  console.log(["proposers"].concat(gcnames).join(","));
 
-  for (const proposer of gcNames) {
+  for (const proposer of gcnames) {
     const row = [proposer];
-    for (const target of gcNames) {
+    for (const target of gcnames) {
       const ret = await VrankLog.find({
         $and: [
           { proposer: proposer },
