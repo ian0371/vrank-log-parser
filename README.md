@@ -32,15 +32,13 @@ Queries
 - consensus_info
   - argument: block number
   - desc: Shows the proposer, committee of RPC_call `klay_getBlockWithConsensusInfoByNumber`
-- over_300
-  - argument: Proposer1, Proposer2. `any` is allowed to represent all GCs
-  - desc: Shows late GCs for blocks where block #N-1 proposer = Proposer1 && block #N proposer = Proposer2
-- block_late_view
-  - argument: block number
-  - desc: Shows late information viewed by all loggers
-- many_lates
-  - argument: threshold (default=8)
-  - desc: Shows blocks whose number of late GCs > threshold
+- table_view
+  - argument: <block number> OR <prev proposer> <proposer>
+  - desc: if block number is given, shows the refined log at block.
+    if not, finds blocks where prevProposer and proposer matches, and shows the refined logs at the blocks.
+    (prev)proposer can be "any".
+- view
+  - desc: Shows the number of records in DB, and shows the first record
 
 To download logs from DataDog, see [download](./download/README.md).
 
