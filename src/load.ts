@@ -51,45 +51,57 @@ async function main() {
   let vrankLogs: VrankLog[] = [];
 
   for (let [i, line] of lines.entries()) {
-    if (line.includes("host,blocknumber,round,late,bitmap")) {
-      continue;
-    }
-    // batch insert
-    if (i % 1000 == 0) {
-      console.log(`Parsing line ${i + 1} into DB`);
-      await insertVrankLog(vrankLogs);
-      vrankLogs = [];
-    }
+    try {
+      if (line.includes("host,blocknumber,round,late,bitmap")) {
+        continue;
+      }
+      // batch insert
+      if (i % 1000 == 0) {
+        console.log(`Parsing line ${i + 1} into DB`);
+        await insertVrankLog(vrankLogs);
+        vrankLogs = [];
+      }
 
-    const { logger, blocknum, round, late, committee, proposer, assessments } =
-      await processLine(line);
-    if (blocknum < minBlocknum) {
-      minBlocknum = blocknum;
-    }
-    if (blocknum > maxBlocknum) {
-      maxBlocknum = blocknum;
-    }
-
-    const { earlys, lates, notArriveds, lateTimes } = group(
-      committee,
-      assessments,
-      late,
-    );
-
-    vrankLogs.push(
-      new VrankLog({
+      const {
+        logger,
         blocknum,
         round,
-        logger,
+        late,
+        committee,
         proposer,
-        assessment: {
-          early: earlys,
-          late: lates,
-          notArrived: notArriveds,
-          lateTimes,
-        },
-      }),
-    );
+        assessments,
+      } = await processLine(line);
+      if (blocknum < minBlocknum) {
+        minBlocknum = blocknum;
+      }
+      if (blocknum > maxBlocknum) {
+        maxBlocknum = blocknum;
+      }
+
+      const { earlys, lates, notArriveds, lateTimes } = group(
+        committee,
+        assessments,
+        late,
+      );
+
+      vrankLogs.push(
+        new VrankLog({
+          blocknum,
+          round,
+          logger,
+          proposer,
+          assessment: {
+            early: earlys,
+            late: lates,
+            notArrived: notArriveds,
+            lateTimes,
+          },
+        }),
+      );
+    } catch (err: any) {
+      console.error(`Error at ${line}`);
+      throw err;
+    }
   }
 
   await insertVrankLog(vrankLogs);
