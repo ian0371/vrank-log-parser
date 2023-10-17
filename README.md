@@ -33,11 +33,11 @@ Queries
   - argument: block number
   - desc: Shows the proposer, committee of RPC_call `klay_getBlockWithConsensusInfoByNumber`
 - over_300
-  - argument: Proposer1, Proposer2
+  - argument: Proposer1, Proposer2. `any` is allowed to represent all GCs
   - desc: Shows late GCs for blocks where block #N-1 proposer = Proposer1 && block #N proposer = Proposer2
-- proposer_late_view (WIP)
+- block_late_view
   - argument: block number
-  - desc: Shows Vrank matrix
+  - desc: Shows late information viewed by all loggers
 - many_lates
   - argument: threshold (default=8)
   - desc: Shows blocks whose number of late GCs > threshold
