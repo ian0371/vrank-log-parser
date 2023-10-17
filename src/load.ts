@@ -106,7 +106,18 @@ async function main() {
 
   await insertVrankLog(vrankLogs);
 
-  await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
+  let metadata = await VrankLogMetadata.findOne();
+  if (metadata != null) {
+    if (metadata.minBlocknum > minBlocknum) {
+      metadata.minBlocknum = minBlocknum;
+    }
+    if (metadata.maxBlocknum < maxBlocknum) {
+      metadata.maxBlocknum = maxBlocknum;
+    }
+    await new VrankLogMetadata(metadata).save();
+  } else {
+    await new VrankLogMetadata({ minBlocknum, maxBlocknum }).save();
+  }
 
   await mongoose.disconnect();
 }
