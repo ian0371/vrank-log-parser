@@ -84,22 +84,26 @@ async function main() {
         late,
       );
 
-      vrankLogs.push(
-        new VrankLog({
-          blocknum,
-          round,
-          logger,
-          proposer,
-          assessment: {
-            early: earlys,
-            late: lates,
-            notArrived: notArriveds,
-            lateTimes,
-          },
-        }),
-      );
+      const record = new VrankLog({
+        blocknum,
+        round,
+        logger,
+        proposer,
+        assessment: {
+          early: earlys,
+          late: lates,
+          notArrived: notArriveds,
+          lateTimes,
+        },
+      });
+      if (record.validateSync()) {
+        console.error(record.validateSync());
+        console.error(record);
+        throw Error();
+      }
+      vrankLogs.push(record);
     } catch (err: any) {
-      console.error(`Error at ${line}`);
+      console.error(`Error at line ${i + 1}: ${line}`);
       throw err;
     }
   }
@@ -123,9 +127,21 @@ async function main() {
 }
 
 function parseLog(log: string) {
-  const [logger, blocknumStr, roundStr, lateStr, bitmap] = log.split(",");
+  let [logger, blocknumStr, roundStr, lateStr, bitmap] = log.split(",");
+
+  // verification
+  logger = logger.replace(/-cn-01$/, "");
+  if (!isValidGcName(logger)) {
+    throw Error(`Not a valid GC name, ${logger}`);
+  }
   const blocknum = parseInt(blocknumStr);
+  if (isNaN(blocknum)) {
+    throw Error("NaN blocknum in log");
+  }
   const round = parseInt(roundStr);
+  if (isNaN(round)) {
+    throw Error("NaN round in log");
+  }
   const late = lateStr
     .replace(/\[|\]/g, "")
     .split(" ")
@@ -137,7 +153,7 @@ function parseLog(log: string) {
       }
     });
   return {
-    logger: logger.replace(/-cn-01$/, ""),
+    logger,
     blocknum,
     round,
     late,
@@ -155,10 +171,25 @@ function parseBitmap(bitmap: string) {
   return assessments;
 }
 
-async function getBlockInfoLoop(blockNum: number) {
+async function getConsensusBlockLoop(blockNum: number): Promise<blockInfo> {
+  if (blockInfoCache[blockNum] != null) {
+    return blockInfoCache[blockNum];
+  }
+
   for (;;) {
     try {
-      return await _getBlockInfo(blockNum);
+      const rpcResult = await _getConsensusInfo(blockNum);
+      let { committee, proposer }: blockInfo = rpcResult;
+
+      // committee is sorted by checksum-ed address, case-sensitive
+      committee = committee.map((x) => ethers.utils.getAddress(x));
+      committee.sort();
+      committee = committee.map(getNameByAddress);
+      proposer = ethers.utils.getAddress(proposer);
+      proposer = getNameByAddress(proposer);
+      const ret: blockInfo = { committee, proposer };
+      blockInfoCache[blockNum] = ret;
+      return ret;
     } catch (err: any) {
       if (err.code == "TIMEOUT") {
         console.log(`RPC timeout. retrying... ${blockNum}`);
@@ -171,8 +202,8 @@ async function getBlockInfoLoop(blockNum: number) {
 
 async function processLine(line: string) {
   const { logger, blocknum, round, late, bitmap: _bitmap } = parseLog(line);
-  const { committee, proposer } = await getBlockInfoLoop(blocknum);
-  const bitmap = _bitmap.padStart(Math.ceil(committee.length / 2), "0");
+  const { committee, proposer } = await getConsensusBlockLoop(blocknum);
+  const bitmap = _bitmap.padStart(Math.ceil(committee.length / 3), "0");
   const assessments = parseBitmap(bitmap);
   return {
     logger,
@@ -204,38 +235,34 @@ function group(committee: string[], assessments: number[], late: number[]) {
   return { earlys, lates, notArriveds, lateTimes };
 }
 
-async function _getBlockInfo(blockNum: number) {
-  if (blockInfoCache[blockNum] != null) {
-    return blockInfoCache[blockNum];
-  }
-
+async function _getConsensusInfo(blockNum: number) {
   const provider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINT);
-  let { committee, proposer }: { committee: string[]; proposer: string } =
-    await provider.send("klay_getBlockWithConsensusInfoByNumber", [
-      "0x" + blockNum.toString(16),
-    ]);
-
-  // validator is sorted by checksum-ed address, case-sensitive
-  committee = committee.map((x) => ethers.utils.getAddress(x));
-  committee.sort();
-  const ret: blockInfo = {
-    committee: committee.map(getNameByAddress),
-    proposer: getNameByAddress(proposer),
-  };
-  blockInfoCache[blockNum] = ret;
-  return ret;
+  return await provider.send("klay_getBlockWithConsensusInfoByNumber", [
+    "0x" + blockNum.toString(16),
+  ]);
 }
 
-function getNameByAddress(addr: string) {
+function loadGcNames() {
   if (gcnames == null) {
     gcnames = JSON.parse(fs.readFileSync("gcnames.json", "utf-8"));
   }
+}
 
-  if (gcnames[addr] == null) {
-    throw Error(`no addr ${addr}`);
+function getNameByAddress(checksumAddr: string) {
+  loadGcNames();
+  if (gcnames[checksumAddr] == null) {
+    throw Error(`no addr ${checksumAddr}`);
   }
 
-  return gcnames[addr];
+  return gcnames[checksumAddr];
+}
+
+function isValidGcName(name: string) {
+  loadGcNames();
+  if (Object.values(gcnames).includes(name)) {
+    return true;
+  }
+  return false;
 }
 
 // We recommend this pattern to be able to use async/await everywhere
