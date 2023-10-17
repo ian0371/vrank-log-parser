@@ -15,7 +15,7 @@ docker run --name mongo -v ./data:/data/db -d -p 27017:27017 mongo
 bun run src/load.ts sample_input.txt
 ```
 
-To view all data:
+To view one data:
 
 ```bash
 bun run src/view.ts
@@ -24,8 +24,23 @@ bun run src/view.ts
 To view queried data:
 
 ```bash
-bun run src/query_*.ts
+bun run query/*.ts
 ```
+
+Queries
+
+- consensus_info
+  - argument: block number
+  - desc: Shows the proposer, committee of RPC_call `klay_getBlockWithConsensusInfoByNumber`
+- over_300
+  - argument: Proposer1, Proposer2
+  - desc: Shows late GCs for blocks where block #N-1 proposer = Proposer1 && block #N proposer = Proposer2
+- proposer_late_view (WIP)
+  - argument: block number
+  - desc: Shows Vrank matrix
+- many_lates
+  - argument: threshold (default=8)
+  - desc: Shows blocks whose number of late GCs > threshold
 
 To download logs from DataDog, see [download](./download/README.md).
 

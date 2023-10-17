@@ -6,7 +6,11 @@ async function main() {
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
-  const threshold = 8;
+  let threshold = 8;
+  if (process.argv.length >= 3) {
+    threshold = parseInt(process.argv[2]);
+  }
+
   const blockNums: number[] = await VrankLog.distinct("blocknum");
 
   for (const blocknum of blockNums) {

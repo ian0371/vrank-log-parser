@@ -1,17 +1,31 @@
 import { VrankLog } from "../src/schema";
 
-export async function logLateGc(proposer: string, logger: string) {
-  console.log(`proposer=${proposer} logger=${logger}`);
-  const blockNums: number[] = await VrankLog.distinct("blocknum", {
-    proposer: proposer,
+export async function logLateGc(p1: string, p2: string) {
+  console.log(
+    `*****proposer at block is ${p2}, previous proposer is ${p1} *****`,
+  );
+  const p1Blocks: number[] = await VrankLog.distinct("blocknum", {
+    proposer: p1,
+  });
+  const p2Blocks: number[] = await VrankLog.distinct("blocknum", {
+    proposer: p2,
   });
 
-  for (const blocknum of blockNums) {
+  const neighbors = [];
+  for (let i = 0; i < p1Blocks.length; i++) {
+    for (let j = 0; j < p2Blocks.length; j++) {
+      if (p2Blocks[j] - p1Blocks[i] == 1) {
+        neighbors.push(p2Blocks[i]);
+      }
+    }
+  }
+
+  for (const p2Block of neighbors) {
     const log = await VrankLog.findOne({
-      $and: [{ blocknum: blocknum + 1 }, { logger: logger }],
+      $and: [{ blocknum: p2Block }, { logger: p2 }],
     });
     if (log == null) {
-      console.error(`Log at ${blocknum + 1} not found. continuing...`);
+      console.error(`Log at ${p2Block} not found. continuing...`);
       continue;
     }
     if (log?.assessment?.lateTimes == null) {

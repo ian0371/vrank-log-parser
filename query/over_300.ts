@@ -1,5 +1,6 @@
 import * as mongoose from "mongoose";
 import { logLateGc } from "./util";
+import { loadGcNames } from "../src/util";
 
 async function main() {
   console.log("Connecting Mongo DB...");
@@ -8,14 +9,36 @@ async function main() {
 
   if (process.argv.length < 4) {
     console.error(
-      `Usage: ${process.argv[0]} ${process.argv[1]} <PrevProposer> <Logger>`,
+      `Usage: ${process.argv[0]} ${process.argv[1]} <Proposer1> <Proposer2>`,
+      `Returns late GCs for blocks where block #N-1 proposer = Proposer1 && block #N proposer = Proposer2`,
     );
     throw Error("Argument missing");
   }
 
-  const proposer = process.argv[2];
-  const logger = process.argv[3];
-  await logLateGc(proposer, logger);
+  const p1 = process.argv[2];
+  const p2 = process.argv[3];
+
+  const gcnames = Object.values(loadGcNames());
+
+  let p1List = [],
+    p2List = [];
+  if (p1 == "any") {
+    p1List = gcnames;
+  } else {
+    p1List = [p1];
+  }
+
+  if (p2 == "any") {
+    p2List = gcnames;
+  } else {
+    p2List = [p2];
+  }
+
+  for (const _p1 of p1List) {
+    for (const _p2 of p2List) {
+      await logLateGc(_p1, _p2);
+    }
+  }
 
   await mongoose.disconnect();
 }
