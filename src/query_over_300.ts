@@ -1,20 +1,8 @@
 import * as mongoose from "mongoose";
 import { VrankLog } from "./schema";
 
-async function main() {
-  console.log("Connecting Mongo DB...");
-  await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
-  console.log("Connected successfully");
-
-  if (process.argv.length < 4) {
-    console.error(
-      `Usage: ${process.argv[0]} ${process.argv[1]} <PrevProposer> <Logger>`,
-    );
-    throw Error("Argument missing");
-  }
-
-  const proposer = process.argv[2];
-  const logger = process.argv[3];
+export async function logLateGc(proposer: string, logger: string) {
+  console.log(`proposer=${proposer} logger=${logger}`);
   const blockNums: number[] = await VrankLog.distinct("blocknum", {
     proposer: proposer,
   });
@@ -41,6 +29,23 @@ async function main() {
       console.log(`block: ${log.blocknum}, Over 300ms: ${over300}`);
     }
   }
+}
+
+async function main() {
+  console.log("Connecting Mongo DB...");
+  await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
+  console.log("Connected successfully");
+
+  if (process.argv.length < 4) {
+    console.error(
+      `Usage: ${process.argv[0]} ${process.argv[1]} <PrevProposer> <Logger>`,
+    );
+    throw Error("Argument missing");
+  }
+
+  const proposer = process.argv[2];
+  const logger = process.argv[3];
+  await logLateGc(proposer, logger);
 
   await mongoose.disconnect();
 }

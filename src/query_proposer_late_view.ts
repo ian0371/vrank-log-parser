@@ -23,9 +23,11 @@ async function main() {
           { "assessment.late": { $elemMatch: { $eq: target } } },
         ],
       });
-      console.log(ret);
-      await mongoose.disconnect();
-      return;
+      if (ret.length > 0) {
+        console.log(ret);
+        await mongoose.disconnect();
+        return;
+      }
       row.push(ret.length.toString());
     }
     console.log(row.join(","));
