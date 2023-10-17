@@ -12,8 +12,6 @@ async function main() {
     throw Error("metadata is null");
   }
 
-  const lateBlocks = [];
-
   for (
     let blocknum = metadata.minBlocknum;
     blocknum < metadata.maxBlocknum + 1;
@@ -24,10 +22,9 @@ async function main() {
     // if no log exist, consider it late (problematic).
     const numLates = ret?.assessment?.late.length ?? 99;
     if (numLates > threshold) {
-      lateBlocks.push({ blocknum, numLates });
+      console.log({ blocknum, numLates });
     }
   }
-  console.log(lateBlocks);
 
   await mongoose.disconnect();
 }

@@ -12,8 +12,6 @@ async function main() {
     throw Error("metadata is null");
   }
 
-  const lateBlocks = [];
-
   for (
     let blocknum = metadata.minBlocknum;
     blocknum < metadata.maxBlocknum + 1;
@@ -28,10 +26,9 @@ async function main() {
     }
 
     if (numLates.length > threshold) {
-      lateBlocks.push({ blocknum, numLates });
+      console.log({ blocknum, numLates });
     }
   }
-  console.log(lateBlocks);
 
   await mongoose.disconnect();
 }
