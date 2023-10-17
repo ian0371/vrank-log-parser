@@ -51,7 +51,6 @@ export async function getConsensusBlockLoop(
       // committee is sorted by checksum-ed address, case-sensitive
       committee = committee.map((x) => ethers.utils.getAddress(x));
       committee.sort();
-      console.log(committee);
       committee = committee.map(getGcNameByAddr);
       proposer = ethers.utils.getAddress(proposer);
       proposer = getGcNameByAddr(proposer);
