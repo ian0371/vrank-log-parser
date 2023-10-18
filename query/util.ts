@@ -1,7 +1,7 @@
 import { VrankLog } from "../src/schema";
 import { loadGcNames } from "../src/util";
 
-type table = { [key: string]: { [key: string]: string } };
+type map = { [key: string]: { [key: string]: string } };
 
 export async function getBlockNumsFromArgs(): Promise<number[]> {
   if (process.argv.length == 3) {
@@ -56,8 +56,7 @@ export async function blockView(blocknum: number) {
     blocknum: blocknum - 1,
   });
 
-  console.log(`latency:`);
-  const map: table = {};
+  const map: map = {};
   for (const log of logs) {
     map[log.logger] = {};
     for (const [i, gc] of log.assessment?.late.entries() ?? []) {
@@ -79,19 +78,20 @@ export async function blockView(blocknum: number) {
   };
 }
 
-export function printMap(table: table) {
+export function csv(info = "proposers", map: map) {
   const gcnames = Object.values(loadGcNames());
-  console.log(["proposers"].concat(gcnames).join(","));
+  let ret = [info].concat(gcnames).join(",") + "\n";
   for (const row of gcnames) {
     const buf = [row];
-    if (table[row] == null) {
+    if (map[row] == null) {
       buf.push(...Array(gcnames.length).fill("-"));
     } else {
       for (const col of gcnames) {
-        buf.push(table[row][col] ?? "x");
+        buf.push(map[row][col] ?? "x");
       }
     }
 
-    console.log(buf.join(","));
+    ret += buf.join(",") + "\n";
   }
+  return ret;
 }

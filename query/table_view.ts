@@ -1,5 +1,5 @@
 import * as mongoose from "mongoose";
-import { blockView, getBlockNumsFromArgs, printMap } from "./util";
+import { blockView, getBlockNumsFromArgs, csv } from "./util";
 
 async function main() {
   console.log("Connecting Mongo DB...");
@@ -10,11 +10,8 @@ async function main() {
 
   for (const num of blockNumList) {
     const record = await blockView(num);
-    console.log(`* blocknum: ${num}`);
-    console.log(`* proposer: ${record.proposer}`);
-    console.log(`* prev_proposer: ${record.prev_proposer}`);
-    console.log(`* csv`);
-    printMap(record.map);
+    const info = `num:${num}/proposer:${record.proposer}/prev_proposer:${record.prev_proposer}`;
+    console.log(csv(info, record.map));
   }
 
   await mongoose.disconnect();
