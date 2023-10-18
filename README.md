@@ -30,13 +30,14 @@ bun run query/*.ts
 Queries
 
 - consensus_info
-  - argument: block number
+  - argument: `<block number>`
   - desc: Shows the proposer, committee of RPC_call `klay_getBlockWithConsensusInfoByNumber`
 - table_view
-  - argument: <block number> OR <prev proposer> <proposer>
-  - desc: if block number is given, shows the refined log at block.
-    if not, finds blocks where prevProposer and proposer matches, and shows the refined logs at the blocks.
-    (prev)proposer can be "any".
+  - argument: either of the followings
+    - `<block number>`: shows log at the block
+    - `<start block number> <end block number>`: shows logs at the blocks in the range
+    - `<prev proposer> <proposer>`: finds the blocks where prevProposer and proposer matches, and shows logs at those blocks. (prev)proposer can be "any".
+  - desc: shows refind logs as the output
   - output:
     - blank: early
     - number: late time (ms)

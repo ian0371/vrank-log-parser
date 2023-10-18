@@ -6,6 +6,12 @@ type map = { [key: string]: { [key: string]: string } };
 export async function getBlockNumsFromArgs(): Promise<number[]> {
   if (process.argv.length == 3) {
     return [parseInt(process.argv[2])];
+  } else if (process.argv.length == 4 && typeof /^\d+$/.test(process.argv[2])) {
+    // equivalent of python's range(start, end)
+    const start = parseInt(process.argv[2]);
+    const end = parseInt(process.argv[3]);
+    const len = end - start;
+    return Array.from({ length: len }, (_, index) => start + index);
   } else if (process.argv.length == 4) {
     const [prevProposer, proposer] = [process.argv[2], process.argv[3]];
     if (prevProposer == "any" || proposer == "any") {
