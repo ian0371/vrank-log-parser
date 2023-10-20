@@ -20,9 +20,6 @@ async function main() {
   await mongoose.connect("mongodb://127.0.0.1:27017/vrank");
   console.log("Connected successfully");
 
-  let minBlocknum = 9999999999,
-    maxBlocknum = 0;
-
   let vrankLogs: VrankLog[] = [];
 
   for (let [i, line] of lines.entries()) {
@@ -46,12 +43,10 @@ async function main() {
         proposer,
         assessments,
       } = await processLine(line);
-      if (blocknum < minBlocknum) {
-        minBlocknum = blocknum;
-      }
-      if (blocknum > maxBlocknum) {
-        maxBlocknum = blocknum;
-      }
+
+      const { proposer: prevProposer } = await getConsensusBlockLoop(
+        blocknum - 1,
+      );
 
       const { earlys, lates, notArriveds, lateTimes } = group(
         committee,
@@ -64,6 +59,7 @@ async function main() {
         round,
         logger,
         proposer,
+        prevProposer,
         assessment: {
           early: earlys,
           late: lates,

@@ -5,6 +5,7 @@ const vrankLogSchema = new mongoose.Schema({
   round: { type: Number, required: true },
   logger: { type: String, required: true },
   proposer: { type: String, required: true },
+  prevProposer: { type: String, required: true },
   assessment: {
     early: [String],
     late: [String],

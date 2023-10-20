@@ -31,6 +31,10 @@ async function main() {
         assessments,
       } = await processLine(line);
 
+      const { proposer: prevProposer } = await getConsensusBlockLoop(
+        blocknum - 1,
+      );
+
       const { earlys, lates, notArriveds, lateTimes } = group(
         committee,
         assessments,
@@ -42,6 +46,7 @@ async function main() {
         round,
         logger,
         proposer,
+        prevProposer,
         assessment: {
           early: earlys,
           late: lates,
@@ -60,6 +65,7 @@ async function main() {
           blocknum,
           logger,
           proposer,
+          prevProposer,
           committee,
           assessment: {
             early: earlys,
