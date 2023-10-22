@@ -49,6 +49,21 @@ export async function getConsensusBlockLoop(
       let { committee, proposer }: blockInfo = rpcResult;
 
       // committee is sorted by checksum-ed address, case-sensitive
+      /* how to see:
+       *
+      func TestVrankSort(t *testing.T) {
+        s1 := []string{
+            "0xa3b387b7B0dC914a4F106Ad645A0Ad079d70EBdC", "0xBc28b81E73a66747695D9236dC20491D65f74381",
+            "0xBCA8fFa45CC8e30bBC0522CdF1A1e0eBF540dfE2", "0xC0cBE1C770fbCE1eb7786BFBa1Ac2115D5C0a456",
+        }
+        v1 := make([]common.Address, len(s1))
+        for i := range s1 {
+            v1[i] = common.HexToAddress(s1[i])
+        }
+        vs1 := validator.NewWeightedCouncil(v1, nil, nil, nil, nil, istanbul.WeightedRandom, uint64(len(s1)), 0, 0, &blockchain.BlockChain{})
+        fmt.Println(vs1.GetValidators())
+      }
+      */
       committee = committee.map((x) => ethers.utils.getAddress(x));
       committee.sort();
       committee = committee.map(getGcNameByAddr);
